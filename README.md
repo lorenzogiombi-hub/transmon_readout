@@ -184,16 +184,20 @@ When the probe is far from $\omega_r$, nearly all power passes straight through 
 
 #### `DispersiveCoupler`
 
-Computes the dispersive shift χ between a transmon qubit and a readout resonator, using the transmon-accurate formula that accounts for the second excited state |f⟩:
-
+Dataclass that computes the dispersive shift $\chi$ between a transmon qubit and a readout resonator:
+```math
+\chi = −\frac{g^2 }{\delta_{qr}}
 ```
-χ = −g² α / (Δ_qr (Δ_qr + α))
+or accounting for higher excited states (need better analysis for this formula)
+```math
+\chi = −\frac{g^2 \alpha}{\delta_{qr} (\delta_{qr} + \alpha)}
 ```
-
-where g is the coupling strength, Δ_qr = ω₀₁ − ω_r is the qubit-resonator detuning, and α is the transmon anharmonicity. This differs from the simpler two-level result χ = g²/Δ_qr by the factor α/(Δ_qr + α).
+where $g$ is the coupling strength, $\delta_{qr} = \omega_{01} − \omega_r$ is the qubit-resonator detuning, and $\alpha$ is the transmon anharmonicity. 
 
 ```python
 coupler = DispersiveCoupler(qubit=spec, resonator=resonator, g=0.08)
+# where spec = TransmonSpectrum(...) ~ bare transmon
+# and resonator = ReadoutResonator(...)  ~ bare resonator
 ```
 
 | Attribute / property | Type | Description |
@@ -201,26 +205,30 @@ coupler = DispersiveCoupler(qubit=spec, resonator=resonator, g=0.08)
 | `qubit` | `TransmonSpectrum` | Transmon qubit |
 | `resonator` | `ReadoutResonator` | Readout resonator |
 | `g` | `float` | Qubit-resonator coupling strength [GHz] |
-| `delta_qr` | `float` | Detuning Δ_qr = ω₀₁ − ω_r [GHz] |
-| `chi_bare` | `float` | Two-level approximation χ = g²/Δ_qr [GHz] |
+| `delta_qr` | `float` | Detuning [GHz] |
+| `chi_bare` | `float` | Two-level approximation $\chi = g^2/\delta_{qr}$ [GHz] |
 | `chi` | `float` | Transmon-accurate dispersive shift [GHz] |
-| `chi_MHz` | `float` | Same in MHz |
-| `shift_g` | `float` | Resonator shift for qubit in \|g⟩: −χ [GHz] |
-| `shift_e` | `float` | Resonator shift for qubit in \|e⟩: +χ [GHz] |
-| `separation` | `float` | 2\|χ\| — frequency gap between the two dressed resonances [GHz] |
-| `separation_MHz` | `float` | Same in MHz |
-| `is_resolved` | `bool` | True if 2\|χ\| > κ (strong-dispersive / single-shot regime) |
+<!-- | `chi_MHz` | `float` | Same in MHz | -->
+| `shift_g` | `float` | Resonator shift for qubit in \|g⟩: −$\chi$ [GHz] |
+| `shift_e` | `float` | Resonator shift for qubit in \|e⟩: +$\chi$ [GHz] |
+| `separation` | `float` | 2$\vert \chi \vert$ — frequency gap between the two dressed resonances [GHz] |
+<!-- | `separation_MHz` | `float` | Same in MHz | -->
+| `is_resolved` | `bool` | True if $2\vert \chi\vert > \kappa$ (strong-dispersive / single-shot regime) |
 
-**Physics note.** `is_resolved = True` indicates the two resonances are spectrally distinguishable — the resolved-sideband limit where single-shot QND readout is possible without post-selection. The condition 2|χ| > κ is the standard design target.
+`is_resolved = True` indicates the two resonances are spectrally distinguishable, that is the resolved-sideband limit where single-shot QND readout is possible without post-selection. 
+
+<!-- --- -->
+
+<!-- #### Free functions — `readout` -->
+
+<!-- | Function | Returns | Description |
+|---|---|---|
+| `dressed_resonator(coupler, qubit_state)` | `(ReadoutResonator, float)` | Returns a copy of the resonator with the dispersive shift applied for state `'g'` or `'e'` | -->
+
+
+The function `dressed_resonator(coupler, qubit_state)` returns an istance of `(ReadoutResonator, float)` and creates a copy of the resonator with the dispersive shift applied for state `'g'` or `'e'`.
 
 ---
-
-#### Free functions — `readout`
-
-| Function | Returns | Description |
-|---|---|---|
-| `dressed_resonator(coupler, qubit_state)` | `(ReadoutResonator, float)` | Returns a copy of the resonator with the dispersive shift applied for state `'g'` or `'e'` |
-
 ---
 
 ### `transmon_readout.measurement`
