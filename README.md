@@ -235,31 +235,30 @@ The function `dressed_resonator(coupler, qubit_state)` returns an istance of `(R
 
 #### `AmplifierStage`
 
-A single amplifier stage characterised by its noise temperature T_N and power gain. The added noise in photon units is:
+Dataclass that describes a single amplifier stage characterised by its noise temperature $T_N$ and power gain. The added noise in photon units is:
 
-```
-N_add = k_B T_N / (ħ ω_r)
+```math
+N_{\text{add}} = k_B T_N / (h \omega_r)
 ```
 
-The standard quantum limit for a phase-insensitive amplifier is N_add ≥ 1/2.
+The standard quantum limit for a phase-insensitive amplifier is $N_{\text{add}} \gtr 1/2$.
 
 ```python
-stage = AmplifierStage(name='HEMT', T_N=4.0, gain_dB=40, omega_r=6.0,
-                       location='4 K', kind='hemt')
+stage = AmplifierStage(name='HEMT', T_N=4.0, gain_dB=40, omega_r=6.0,location='4 K', kind='hemt')
 ```
 
 | Attribute / property | Type | Description |
 |---|---|---|
-| `name` | `str` | Human-readable label |
+| `name` | `str` | Amplifiee lable |
 | `T_N` | `float` | Noise temperature [K] |
 | `gain_dB` | `float` | Available power gain [dB] |
 | `omega_r` | `float` | Resonator frequency used for N_add conversion [GHz] |
 | `location` | `str` | Physical stage (informational) |
 | `kind` | `str` | `'hemt'`, `'jpa'`, `'lna'`, or `'generic'` |
 | `gain_linear` | `float` | Power gain as a linear factor |
-| `N_add` | `float` | Added noise quanta k_B T_N / (ħ ω_r) |
+| `N_add` | `float` | Added noise quanta $k_B T_N / (h \omega_r)$ |
 | `noise_quanta` | `float` | N_add + 1/2 (includes vacuum floor) |
-| `is_quantum_limited` | `bool` | True if N_add ≤ 1 (within 2× of the SQL) |
+<!-- | `is_quantum_limited` | `bool` | True if N_add ≤ 1 | -->
 | `noise_figure_dB` | `float` | Classical noise figure referenced to 290 K [dB] |
 
 Three factory functions build physically motivated presets:
@@ -276,12 +275,10 @@ Three factory functions build physically motivated presets:
 
 A cascade of `AmplifierStage` objects. The system noise referred to the input is computed with the Friis formula:
 
+```math
+N_{\text{sys}} = N_1 + \frac{N_2}{G_1} + \frac{N_3}{G_1 G_2} + ...
 ```
-N_sys = N_1 + N_2/G_1 + N_3/(G_1 G_2) + ...
-```
-
-Because the gain of the first stage suppresses the noise contributions of all subsequent stages, the first amplifier dominates. This is why placing a near-quantum-limited JPA at the mixing chamber reduces N_sys from ~90 photons (HEMT alone) to ~2 photons.
-
+Call it with
 ```python
 chain = AmplifierChain(stages=[make_jpa(6.0), make_hemt(6.0), make_lna(6.0)])
 ```
@@ -294,45 +291,46 @@ chain = AmplifierChain(stages=[make_jpa(6.0), make_hemt(6.0), make_lna(6.0)])
 | `total_gain_dB` | `float` | Sum of stage gains [dB] |
 | `friis_breakdown()` | `list[dict]` | Per-stage noise contribution and fraction of total |
 
-Three pre-built chains are provided as convenience functions:
+<!-- Three pre-built chains are provided as convenience functions:
 
 | Function | Stages | Typical N_sys @ 6 GHz |
 |---|---|---|
 | `chain_lna_only(omega_r)` | LNA at 300 K | ~1092 |
 | `chain_hemt_lna(omega_r)` | HEMT at 4 K → LNA at 300 K | ~88 |
-| `chain_jpa_hemt_lna(omega_r)` | JPA at 10 mK → HEMT at 4 K → LNA at 300 K | ~2 |
+| `chain_jpa_hemt_lna(omega_r)` | JPA at 10 mK → HEMT at 4 K → LNA at 300 K | ~2 | -->
 
 ---
 
 #### `MeasurementSetup`
 
-The top-level class combining qubit, resonator, coupler, and amplifier chain into a complete readout model. All SNR quantities use the **power convention**:
+Dataclass combining qubit, resonator, coupler, and amplifier chain into a complete readout model. All SNR quantities use the **power convention**:
 
+```math
+\text{SNR}(T) = \frac{\vert V_e -V_g\vert^2  \kappa T}{N_{\text{sys}}}
 ```
-SNR_power(T) = δ² · κ · T / N_sys
-F(T)         = 1 − (1/2) erfc( sqrt(SNR_power / 2) )
-T_int        = SNR_target · N_sys / (δ² · κ)
+```math
+T_{\text{int}} = \text{SNR}_{\text{target}} N_{\text{sys}} / (\vert V_e -V_g\vert^2  \kappa )
 ```
 
-where δ = |V_g − V_e| is the IQ contrast from S₂₁ at the optimal probe frequency, κ = κ_ext + κ_int is the total resonator linewidth, and N_sys = N_add + 1/2 includes the vacuum floor.
-
+Call it with:
 ```python
 setup = MeasurementSetup(coupler=coupler, chain=chain, n_bar=2.0)
+# coupler = DispersiveCoupler(qubit=spec, resonator=resonator, g=0.08) already contains the bare qubit spectrum and the bare resonator
 ```
 
 | Attribute / property | Type | Description |
 |---|---|---|
 | `coupler` | `DispersiveCoupler` | Qubit-resonator system |
 | `chain` | `AmplifierChain` | Amplifier noise chain |
-| `n_bar` | `float` | Mean intra-cavity photon number (informational) |
-| `resonator` | `ReadoutResonator` | Shortcut to `coupler.resonator` |
-| `amplifier` | `AmplifierChain` | Alias for `chain` |
+| `n_bar` | `float` | Mean intra-cavity photon number |
+<!-- | `resonator` | `ReadoutResonator` | Shortcut to `coupler.resonator` | -->
+<!-- | `amplifier` | `AmplifierChain` | Alias for `chain` | -->
 
 | Method | Returns | Description |
 |---|---|---|
 | `optimal_probe_freq()` | `float` | Probe frequency [GHz] that maximises \|V_g − V_e\| |
-| `IQ_signal(probe_freq)` | `dict` | Complex phasors V_g, V_e, contrast δ, and angle at the given probe frequency |
-| `snr_rate(probe_freq)` | `float` | SNR_power accumulation rate Γ = δ² κ / N_sys [ns⁻¹] |
+| `IQ_signal(probe_freq)` | `dict` | Complex phasors V_g, V_e, contrast, and angle at the given probe frequency |
+| `snr_rate(probe_freq)` | `float` | SNR_power accumulation rate SNR/T [ns⁻¹] |
 | `snr_power(t_ns, probe_freq)` | `float` | SNR_power at integration time t [ns] |
 | `integration_time(snr_target, probe_freq)` | `dict` | Integration time, fidelity, and diagnostics for a given SNR_power target |
 | `snr_vs_time(t_max_ns, n_points, probe_freq)` | `dict` | Arrays of t, SNR_power(t), and F(t) |
@@ -344,26 +342,28 @@ The `integration_time()` return dict contains:
 |---|---|
 | `t_int_ns` / `t_int_us` | Integration time in ns and µs |
 | `fidelity` / `fidelity_pct` | Readout fidelity as fraction and percentage |
-| `snr_rate_per_ns` | Γ_SNR [ns⁻¹] |
-| `IQ_contrast` | δ = \|V_g − V_e\| |
+| `snr_rate_per_ns` | SNR/T [ns⁻¹] |
+| `IQ_contrast` | \|V_g − V_e\| |
 | `kappa_MHz` | Total linewidth [MHz] |
 | `N_sys` | System noise quanta |
 | `chi_MHz` | Dispersive shift [MHz] |
 
-**SNR target guide:**
+<!-- **SNR target guide:**
 
 | `snr_target` | Fidelity |
 |---|---|
 | 1 | ~76 % |
 | 4 | ~92 % |
 | 9 | ~98 % |
-| 16 | ~99.6 % |
+| 16 | ~99.6 % | -->
 
+---
 ---
 
 ### `transmon_readout.plots`
 
 All functions accept an optional `ax` argument for embedding into existing figures, and a `show=True` flag. They return the `matplotlib.figure.Figure` object.
+
 
 | Function | Description |
 |---|---|
@@ -377,9 +377,12 @@ All functions accept an optional `ax` argument for embedding into existing figur
 | `plot_charge_dispersion(E_C, E_J)` | Energy levels E₀, E₁, E₂ vs gate charge n_g |
 | `plot_all(setup, save_path)` | Master figure combining S₂₁, charge dispersion, SNR accumulation, noise budget, and t_int summary |
 
+
+
+
 ---
 
-## Output files from `run_simulation.py`
+<!-- ## Output files from `run_simulation.py`
 
 | File | Contents |
 |---|---|
@@ -389,7 +392,7 @@ All functions accept an optional `ax` argument for embedding into existing figur
 | `*_IQ_comparison.png` | IQ plane with noise ellipses at the target integration time |
 | `*_sweeps.png` | t_int vs E_J/E_C and vs n̄ |
 
----
+--- -->
 
 ## Default parameters
 
@@ -410,9 +413,11 @@ All functions accept an optional `ax` argument for embedding into existing figur
 
 ## Key references
 
-- Koch et al., *Phys. Rev. A* **76**, 042319 (2007) — transmon qubit; dispersive shift formula
-- Blais et al., *Phys. Rev. A* **69**, 062320 (2004) — circuit QED; dispersive Hamiltonian
-- Krantz et al., *Appl. Phys. Rev.* **6**, 021318 (2019) — readout SNR model; amplifier chain; IQ detection
-- Khalil et al., *J. Appl. Phys.* **111**, 054510 (2012) — hanger resonator S₂₁ formula
+<!-- - Koch et al., *Phys. Rev. A* **76**, 042319 (2007) — transmon qubit; dispersive shift formula
+- Blais et al., *Phys. Rev. A* **69**, 062320 (2004) — circuit QED; dispersive Hamiltonian -->
+- Krantz et al., *Appl. Phys. Rev.* **6**, 021318 (2019) 
+- Alan Salari, *Microwave Techniques in Superconducting Quantum Computers*
+
+<!-- - Khalil et al., *J. Appl. Phys.* **111**, 054510 (2012) — hanger resonator S₂₁ formula
 - Clerk et al., *Rev. Mod. Phys.* **82**, 1155 (2010) — quantum noise theory; Friis formula
-- Caves, *Phys. Rev. D* **26**, 1817 (1982) — standard quantum limit for linear amplifiers
+- Caves, *Phys. Rev. D* **26**, 1817 (1982) — standard quantum limit for linear amplifiers -->
