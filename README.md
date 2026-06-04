@@ -92,12 +92,12 @@ transmon_readout/
 ├── measurement/
 │   └── noise.py           Amplifier chain and integration time
 ├── plots/
-│   └── figures.py         All publication-quality figures
+│   └── figures.py         Define figure plots
 └── __init__.py
-run_simulation.py           CLI entry point
+run_simulation.py          User interface
 ```
 
-All frequencies are in **GHz** and all times are in **ns** throughout, unless explicitly stated otherwise.
+<!-- All frequencies are in **GHz** and all times are in **ns** throughout, unless explicitly stated otherwise. -->
 
 ---
 
@@ -119,19 +119,17 @@ spec = compute_spectrum(E_C=0.25, E_J=15.0)
 | `E_J` | `float` | Josephson energy [GHz] |
 | `n_g` | `float` | Gate charge (dimensionless) |
 | `energies` | `ndarray` | Lowest eigenvalues [GHz] |
-| `eigenvectors` | `ndarray` | Eigenvectors in the charge basis |
-| `ratio` | `float` | E_J / E_C — the key transmon parameter |
-| `omega_01` | `float` | Qubit transition frequency E₁ − E₀ [GHz] |
-| `omega_12` | `float` | Second transition E₂ − E₁ [GHz] |
-| `anharmonicity` | `float` | α = ω₁₂ − ω₀₁ [GHz], negative for transmon |
-| `anharmonicity_MHz` | `float` | Same in MHz |
-| `analytic_anharmonicity` | `float` | Approximation α ≈ −E_C [GHz] |
-| `charge_matrix_element(m, n)` | `float` | ⟨m\|n̂\|n⟩, relevant for coupling strength |
+| `eigenvectors` | `ndarray` | Eigenvectors in charge basis |
+| `ratio` | `float` | $E_J$ / $E_C$ — the key transmon parameter |
+| `omega_01` | `float` | First transition frequency [GHz] |
+| `omega_12` | `float` | Second transition frequency [GHz] |
+| `anharmonicity` | `float` | $\alpha = \omega_{12} − \omega_{01}$ [GHz], negative for transmon |
+| `charge_matrix_element(m, n)` | `float` | $\langle m\vert n\hat{n} \vert n\rangle⟩ |
 
 **Physics note.** The Hamiltonian is
 
-```
-H = 4 E_C (n̂ − n_g)² − E_J cos(φ̂)
+```math
+H = 4 E_C (\hat{n} − n_g)^2 − E_J \cos(\hat{\phi})
 ```
 
 diagonalised in the charge basis {|n⟩, n ∈ [−N_max, N_max]} using `scipy.linalg.eigh_tridiagonal`. The transmon regime E_J/E_C ≫ 1 exponentially suppresses charge noise sensitivity while the anharmonicity decreases only as a weak power law (α ≈ −E_C for large ratios).
