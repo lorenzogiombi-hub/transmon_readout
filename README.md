@@ -1,23 +1,31 @@
 # Transmon readout chain simulator
 
-A Python package for simulating dispersive readout of superconducting transmon qubits. The simulation covers the full chain from qubit Hamiltonian to measurement fidelity: charge-basis diagonalisation of the transmon, two-port S-parameter modelling of the readout resonator, dispersive coupling between qubit and resonator, and a Friis cascaded noise model for three amplifier configurations (room-temperature LNA, cryogenic HEMT, and Josephson parametric amplifier).
+A Python package for simulating dispersive readout of superconducting transmon qubits. Simulation steps: 
+- Charge-basis diagonalisation of the transmon Hamiltonian, 
+- Two-port S-parameter modelling of the readout resonator in dispersive coupling regime, 
+- Friis cascaded noise model for three amplifier configurations (room-temperature LNA, cryogenic HEMT, and Josephson parametric amplifier),
+- Projection of DC signal onto IQ plane.
 
 ---
 
 ## Physics overview
 
-A transmon qubit is coupled dispersively to a coplanar waveguide resonator. In the dispersive limit the qubit-resonator interaction shifts the resonator frequency by ±χ depending on the qubit state, producing two distinguishable transmission responses S₂₁(ω). A microwave probe tone is sent through the feedline, the output is amplified and IQ-demodulated, and the integrated signal is compared against a threshold.
-
-The signal-to-noise ratio accumulates as:
-
+A transmon qubit is coupled dispersively to a coplanar waveguide resonator. In the dispersive limit the qubit-resonator interaction shifts the resonator frequency by $\pm\chi$ depending on the qubit state, producing two distinguishable transmission responses 
+```math
+S_{21}(\omega) = \frac{\kappa/2}{i(\omega - (\omega_r \pm \chi)) -\kappa/2}
 ```
-SNR_power(T) = δ² · κ · T / N_sys
-```
+with $\kappa$ the linewidth of the resonator. 
+A microwave probe tone is sent through the feedline, the output is amplified and IQ-demodulated, giving output $V_g$ for the qubit in the ground state $(\vert 0\rangle)$ and $V_e$ for the first excited state $(\vert 1\rangle)$. 
 
-where δ = |V_g − V_e| is the IQ separation between the two qubit states, κ is the total resonator linewidth (integration bandwidth), T is the integration time, and N_sys is the system noise in photon units from the Friis amplifier chain. The readout fidelity is:
+The signal-to-noise ratio of the signal power increases linearly with the sampling time $T$:
 
+```math
+\text{SNR}(T) = \frac{\vert V_e - V_g \vert^2 \kappa T}{N_{sys}}
 ```
-F = 1 − (1/2) erfc( sqrt(SNR_power / 2) )
+where $\vert V_g − V_e\vert$ is the IQ separation between the two qubit states, and $N_{sys}$ is the system noise in photon units from the Friis amplifier chain. The readout fidelity is:
+
+```math
+F = 1 − \frac{1}{2} \erfc\left( \sqrt{\frac{\text{SNR}}{2} } \right) 
 ```
 
 ---
