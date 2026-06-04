@@ -186,13 +186,13 @@ When the probe is far from $\omega_r$, nearly all power passes straight through 
 
 Dataclass that computes the dispersive shift $\chi$ between a transmon qubit and a readout resonator:
 ```math
-\chi = −\frac{g^2 }{\delta_{qr}}
+\chi = −\frac{g^2 }{\Delta_{qr}}
 ```
 or accounting for higher excited states (need better analysis for this formula)
 ```math
-\chi = −\frac{g^2 \alpha}{\delta_{qr} (\delta_{qr} + \alpha)}
+\chi = −\frac{g^2 \alpha}{\Delta_{qr} (\Delta_{qr} + \alpha)}
 ```
-where $g$ is the coupling strength, $\delta_{qr} = \omega_{01} − \omega_r$ is the qubit-resonator detuning, and $\alpha$ is the transmon anharmonicity. 
+where $g$ is the coupling strength, $\Delta_{qr} = \omega_{01} − \omega_r$ is the qubit-resonator detuning, and $\alpha$ is the transmon anharmonicity. 
 
 ```python
 coupler = DispersiveCoupler(qubit=spec, resonator=resonator, g=0.08)
@@ -206,7 +206,7 @@ coupler = DispersiveCoupler(qubit=spec, resonator=resonator, g=0.08)
 | `resonator` | `ReadoutResonator` | Readout resonator |
 | `g` | `float` | Qubit-resonator coupling strength [GHz] |
 | `delta_qr` | `float` | Detuning [GHz] |
-| `chi_bare` | `float` | Two-level approximation $\chi = g^2/\delta_{qr}$ [GHz] |
+| `chi_bare` | `float` | Two-level approximation $\chi = g^2/\Delta_{qr}$ [GHz] |
 | `chi` | `float` | Transmon-accurate dispersive shift [GHz] |
 <!-- | `chi_MHz` | `float` | Same in MHz | -->
 | `shift_g` | `float` | Resonator shift for qubit in \|g⟩: −$\chi$ [GHz] |
@@ -377,7 +377,13 @@ All functions accept an optional `ax` argument for embedding into existing figur
 | `plot_charge_dispersion(E_C, E_J)` | Energy levels E₀, E₁, E₂ vs gate charge n_g |
 | `plot_all(setup, save_path)` | Master figure combining S₂₁, charge dispersion, SNR accumulation, noise budget, and t_int summary |
 
+![Master figure combining S₂₁, charge dispersion, SNR accumulation, noise budget, and t_int summary](https://github.com/lorenzogiombi-hub/transmon_readout/blob/main/readout_sim_measurement.png)
 
+![\|S₂₁\|(ω) and ∠S₂₁(ω) for \|g⟩ and \|e⟩, with optimal probe frequency marked](https://github.com/lorenzogiombi-hub/transmon_readout/blob/main/readout_sim_resonator_qubit.png)
+
+![Three IQ-plane panels (one per chain) with resonance circle traces and 1σ noise ellipses](https://github.com/lorenzogiombi-hub/transmon_readout/blob/main/readout_sim_IQ_comparison.png)
+
+![Accumulated IQ signal μ_e(T) = +(δ/2)κT and μ_g(T) = −(δ/2)κT with ±1σ = √(κ N_sys T / 2) shaded bands; illustrates how the Gaussian clouds separate as √T grows slower than T ](https://github.com/lorenzogiombi-hub/transmon_readout/blob/main/readout_sim_signal_accumulation.png)
 
 
 ---
