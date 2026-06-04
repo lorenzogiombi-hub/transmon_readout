@@ -25,23 +25,22 @@ The signal-to-noise ratio of the signal power increases linearly with the sampli
 where $\vert V_g − V_e\vert$ is the IQ separation between the two qubit states, and $N_{sys}$ is the system noise in photon units from the Friis amplifier chain. The readout fidelity is:
 
 ```math
-F = 1 − \frac{1}{2} \erfc\left( \sqrt{\frac{\text{SNR}}{2} } \right) 
+F = 1 − \frac{1}{2} \text{erfc}\left( \sqrt{\frac{\text{SNR}}{2} } \right) 
 ```
 
 ---
 
-## Installation
+## Required packages
 
 ```bash
-# Clone or unzip the project, then install dependencies
 pip install numpy scipy matplotlib
 ```
 
-No package installation is required — run scripts from the project root directory where `transmon_readout/` is visible.
+<!-- No package installation is required — run scripts from the project root directory where `transmon_readout/` is visible. -->
 
 ---
 
-## Quick start
+<!-- ## Quick start
 
 ```python
 from transmon_readout.core      import compute_spectrum
@@ -71,12 +70,12 @@ print(f"t_int = {result['t_int_us']:.3f} µs   F = {result['fidelity_pct']:.2f}%
 
 # 6. All figures
 fig = plot_all(setup)
-```
+``` -->
 
-Or run the command-line entry point:
+Run the simulation with command-line entry point:
 
 ```bash
-python run_simulation.py
+python run_simulation.py   # uses default parameter values 
 python run_simulation.py --EC 0.3 --EJ 18 --g 100 --nbar 3
 ```
 
