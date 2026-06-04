@@ -12,7 +12,7 @@ A Python package for simulating dispersive readout of superconducting transmon q
 
 A transmon qubit is coupled dispersively to a coplanar waveguide resonator. In the dispersive limit the qubit-resonator interaction shifts the resonator frequency by $\pm\chi$ depending on the qubit state, producing two distinguishable transmission responses 
 ```math
-S_{21}(\omega) = \frac{\kappa/2}{i(\omega - (\omega_r \pm \chi)) -\kappa/2}
+S_{21}(\omega) = 1 -\frac{\kappa/2}{i(\omega - (\omega_r \pm \chi)) + \kappa/2}
 ```
 with $\kappa$ the linewidth of the resonator. 
 A microwave probe tone is sent through the feedline, the output is amplified and IQ-demodulated, giving output $V_g$ for the qubit in the ground state $(\vert 0\rangle)$ and $V_e$ for the first excited state $(\vert 1\rangle)$. 
@@ -101,17 +101,17 @@ run_simulation.py          User interface
 
 ---
 
-## Module reference
+## Important classes
 
 ### `transmon_readout.core`
 
-#### `TransmonSpectrum`
+#### `TransmonSpectrum(E_C, E_J, n_g, energies, eigenvectors)`
 
-A dataclass holding the numerically computed spectrum of a transmon qubit. Returned by `compute_spectrum()` — you do not instantiate it directly.
+A dataclass holding the numerically computed spectrum of a transmon qubit. Returned by `compute_spectrum()` 
 
-```python
+<!-- ```python
 spec = compute_spectrum(E_C=0.25, E_J=15.0)
-```
+``` -->
 
 | Attribute / property | Type | Description |
 |---|---|---|
@@ -126,17 +126,16 @@ spec = compute_spectrum(E_C=0.25, E_J=15.0)
 | `anharmonicity` | `float` | $\alpha = \omega_{12} − \omega_{01}$ [GHz], negative for transmon |
 | `charge_matrix_element(m, n)` | `float` | $\langle m\vert n\hat{n} \vert n\rangle⟩ |
 
-**Physics note.** The Hamiltonian is
+The energy spectrum is found by diagonalizing the transmon Hamiltonian
 
 ```math
 H = 4 E_C (\hat{n} − n_g)^2 − E_J \cos(\hat{\phi})
 ```
-
-diagonalised in the charge basis {|n⟩, n ∈ [−N_max, N_max]} using `scipy.linalg.eigh_tridiagonal`. The transmon regime E_J/E_C ≫ 1 exponentially suppresses charge noise sensitivity while the anharmonicity decreases only as a weak power law (α ≈ −E_C for large ratios).
+in the charge basis $\{ \vert n\rangle, n \in [−N_{\text{max}}, N_{\text{max}}] \} using `scipy.linalg.eigh_tridiagonal`. This is done by the function `diagonalize(E_C, E_J, n_g, N_max)` inside `compute_spectrum(E_C, E_J, n_g, N_max) -> TransmonSpectrum`.
 
 ---
 
-#### Free functions — `core`
+<!-- #### Free functions — `core`
 
 | Function | Returns | Description |
 |---|---|---|
@@ -145,7 +144,7 @@ diagonalised in the charge basis {|n⟩, n ∈ [−N_max, N_max]} using `scipy.l
 | `diagonalize(E_C, E_J, n_g, N_max=20, n_levels=6)` | `(energies, vectors)` | Diagonalise and return the lowest `n_levels` eigenpairs |
 | `charge_dispersion(E_C, E_J, n_g_points=101, N_max=20)` | `dict` | Energy levels vs gate charge n_g; includes dispersion ε_m |
 | `sweep_ratio(E_C, ratio_min, ratio_max, n_points, N_max)` | `dict` | Sweep E_J/E_C; returns ω₀₁ and α vs ratio |
-| `cosine_potential(E_J, phi_points=300)` | `(phi, V)` | Josephson potential V(φ) = −E_J cos(φ) |
+| `cosine_potential(E_J, phi_points=300)` | `(phi, V)` | Josephson potential V(φ) = −E_J cos(φ) | -->
 
 ---
 
@@ -153,13 +152,13 @@ diagonalised in the charge basis {|n⟩, n ∈ [−N_max, N_max]} using `scipy.l
 
 #### `ReadoutResonator`
 
-Models a hanger-mode (side-coupled) λ/4 coplanar waveguide resonator as a two-port network. The transmission is
-
+A dataclass describing a decoupled (bare) two-port resonator:
+Transmission coefficient:
+```math
+S_{21}(\omega) = 1 -\frac{\kappa/2}{i(\omega - \omega_r) + \kappa/2}
 ```
-S₂₁(ω) = 1 − (κ_ext/2) / (iΔ + κ/2)
-```
 
-where Δ = ω − ω_r and κ = κ_ext + κ_int.
+where $\kappa = \kappa_{ext} + \kappa_{int}$.
 
 ```python
 resonator = ReadoutResonator(omega_r=6.0, kappa_ext=2e-3, kappa_int=0.4e-3)
@@ -168,18 +167,18 @@ resonator = ReadoutResonator(omega_r=6.0, kappa_ext=2e-3, kappa_int=0.4e-3)
 | Attribute / property | Type | Description |
 |---|---|---|
 | `omega_r` | `float` | Bare resonator frequency [GHz] |
-| `kappa_ext` | `float` | External (coupling) loss rate κ_ext [GHz] |
-| `kappa_int` | `float` | Internal (intrinsic) loss rate κ_int [GHz] |
-| `kappa` | `float` | Total linewidth κ = κ_ext + κ_int [GHz] |
-| `Q_ext` | `float` | External quality factor ω_r / κ_ext |
-| `Q_int` | `float` | Internal quality factor ω_r / κ_int |
-| `Q_total` | `float` | Loaded quality factor ω_r / κ |
-| `S21(freqs, shift=0)` | `ndarray` | Complex S₂₁ at given frequencies with optional dispersive shift |
-| `S21_dB(freqs, shift=0)` | `ndarray` | \|S₂₁\| in dB |
-| `phase(freqs, shift=0)` | `ndarray` | arg(S₂₁) in radians |
-| `group_delay(freqs, shift=0)` | `ndarray` | −d(arg S₂₁)/dω [ns] |
+| `kappa_ext` | `float` | External (coupling) loss rate $\kappa_{ext}$ [GHz] |
+| `kappa_int` | `float` | Internal (intrinsic) loss rate $\kappa_{int}$ [GHz] |
+| `kappa` | `float` | Total linewidth $\kappa$ [GHz] |
+| `Q_ext` | `float` | External quality factor $Q_{ext} = \omega_r/\kappa_{ext} |
+| `Q_int` | `float` | Internal quality factor $Q_{int} = \omega_r/\kappa_{int} |
+| `Q_total` | `float` | Loaded quality factor $Q = Q_{ext} + Q_{int}$ |
+| `S21(freqs, shift=0)` | `ndarray` | Complex $S_{21}$ at given frequencies with optional dispersive shift |
+| `S21_dB(freqs, shift=0)` | `ndarray` | $S_{21}$ in dB |
+| `phase(freqs, shift=0)` | `ndarray` | arg($S_{21}$) in radians |
+<!-- | `group_delay(freqs, shift=0)` | `ndarray` | −d(arg $S_{21}$)/dω [ns] | -->
 
-**Physics note.** The hanger geometry means the resonator hangs off the side of a through-feedline rather than terminating it. When the probe is far from ω_r, nearly all power passes straight through (\|S₂₁\| ≈ 1). Near resonance, power is absorbed into the resonator, creating a notch in transmission. This geometry is standard in circuit QED because multiple resonators at different frequencies can share one feedline.
+When the probe is far from $\omega_r$, nearly all power passes straight through ($S_{21} \approx 1$). Near resonance, power is absorbed into the resonator, creating a notch in transmission. 
 
 ---
 
